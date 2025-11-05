@@ -22,8 +22,23 @@ module "vpc" {
   tags = local.common_tags
 }
 
+
 ############################
-# ECS
+# ECR
+############################
+module "ecr" {
+  source  = "terraform-aws-modules/ecr/aws"
+  version = "3.1.0"
+
+  repository_name = var.project_name
+  repository_type = "public"
+
+  tags = local.common_tags
+}
+
+
+############################
+# ECS - cluster creation
 ############################
 module "ecs" {
   source  = "terraform-aws-modules/ecs/aws"
@@ -37,20 +52,63 @@ module "ecs" {
     "value": "enabled" 
   }
 
-  
-
   tags = local.common_tags
 }
 
 ############################
-# ECR
+# CloudWatch Log Group
 ############################
-module "ecr" {
-  source  = "terraform-aws-modules/ecr/aws"
-  version = "3.1.0"
+resource "aws_cloudwatch_log_group" "ecs" {
+  name = "/ecs/${var.project_name}"
+  retention_in_days = 7
+}
 
-  repository_name = var.project_name
-  repository_type = "public"
+############################
+# ECS Task Definition -- A blueprint for what gonna run inside the ecs cluster
+############################
+resource "aws_ecs_task_definition" "app" {
+  family = "${var.project_name}-task"
+  network_mode = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu = "256"
+  memory = "512"
+  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
 
-  tags = local.common_tags
+  container_definitions = jsonencode([
+    {
+      name = "service-a"
+      image = "${module.ecr.repository_url}:latest"
+      essential   = true
+      portMapping = [{
+        containerPort: 9000
+        hostPort: 9000
+      }]
+      # Integrate ECS Logs with Cloudwatch logs
+      logConfiguration = {
+        logDriver = "awslogs"   # awslogs driver is standard way to integrate ECS logs with CLoudWatch logs
+        options = {
+          awslogs-group = "/ecs/${var.project_name}"    # Name of cloudwatch logs group -- we created it below
+          awslogs-region = var.region   # region where log group exists
+          awslogs-stream-prefix = "ecs"   # prefix for log streams
+        }
+      }
+    }
+  ])
+}
+
+############################
+# ECS - Services [The actual running containers in your cluster]
+############################
+resource "aws_ecs_service" "app_services" {
+  name = "${var.project_name}-service"
+  cluster = module.ecs.cluster_id
+  task_definition = aws_ecs_task_definition.app.arn
+  launch_type = "FARGATE"
+  desired_count = 2
+
+  network_configuration {
+    subnets = module.vpc.private_subnets
+    assign_public_ip = false
+    security_groups = [aws_security_group.web_sg.id]
+  }
 }
