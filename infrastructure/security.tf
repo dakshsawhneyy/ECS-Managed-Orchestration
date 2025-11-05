@@ -27,7 +27,7 @@ resource "aws_security_group" "web_sg" {
   description = "Allow HTTP and SSH access"
   vpc_id = module.vpc.vpc_id
 
-  ingress = {
+  ingress {
     description = "Allow HTTP from anywhere"
     from_port   = 80
     to_port     = 80
