@@ -15,7 +15,7 @@ resource "aws_iam_role" "ecs_task_execution_role" {
 
 # Attatching policy with ECS Role
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
-  role = aws_iam_role.ecs_task_execution_role
+  role       = aws_iam_role.ecs_task_execution_role
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
@@ -23,9 +23,9 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
 # Security Group for ECS Role
 ###############################
 resource "aws_security_group" "web_sg" {
-  name = "${var.project_name}-sg"
+  name        = "${var.project_name}-sg"
   description = "Allow HTTP and SSH access"
-  vpc_id = module.vpc.vpc_id
+  vpc_id      = module.vpc.vpc_id
 
   ingress {
     description = "Allow HTTP from anywhere"

@@ -8,10 +8,10 @@ module "vpc" {
   name = "${var.project_name}-vpc"
   cidr = var.vpc_cidr
 
-  azs = local.azs
-  public_subnets = local.public_subnets
+  azs             = local.azs
+  public_subnets  = local.public_subnets
   private_subnets = local.private_subnets
-  
+
   enable_nat_gateway = true
   single_nat_gateway = var.enable_single_natgateway
 
@@ -45,11 +45,11 @@ module "ecs" {
   version = "6.7.0"
 
   cluster_name = var.project_name
-  
+
   # CloudWatch Observability
   cluster_setting = {
-    "name": "containerInsights",
-    "value": "enabled" 
+    "name" : "containerInsights",
+    "value" : "enabled"
   }
 
   tags = local.common_tags
@@ -59,7 +59,7 @@ module "ecs" {
 # CloudWatch Log Group
 ############################
 resource "aws_cloudwatch_log_group" "ecs" {
-  name = "/ecs/${var.project_name}"
+  name              = "/ecs/${var.project_name}"
   retention_in_days = 7
 }
 
@@ -67,29 +67,29 @@ resource "aws_cloudwatch_log_group" "ecs" {
 # ECS Task Definition -- A blueprint for what gonna run inside the ecs cluster
 ############################
 resource "aws_ecs_task_definition" "app" {
-  family = "${var.project_name}-task"
-  network_mode = "awsvpc"
+  family                   = "${var.project_name}-task"
+  network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu = "256"
-  memory = "512"
-  execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode([
     {
-      name = "service-a"
-      image = "${module.ecr.repository_url}:latest"
-      essential   = true
+      name      = "service-a"
+      image     = "${module.ecr.repository_url}:latest"
+      essential = true
       portMapping = [{
-        containerPort: 9000
-        hostPort: 9000
+        containerPort : 9000
+        hostPort : 9000
       }]
       # Integrate ECS Logs with Cloudwatch logs
       logConfiguration = {
-        logDriver = "awslogs"   # awslogs driver is standard way to integrate ECS logs with CLoudWatch logs
+        logDriver = "awslogs" # awslogs driver is standard way to integrate ECS logs with CLoudWatch logs
         options = {
-          awslogs-group = "/ecs/${var.project_name}"    # Name of cloudwatch logs group -- we created it below
-          awslogs-region = var.region   # region where log group exists
-          awslogs-stream-prefix = "ecs"   # prefix for log streams
+          awslogs-group         = "/ecs/${var.project_name}" # Name of cloudwatch logs group -- we created it below
+          awslogs-region        = var.region                 # region where log group exists
+          awslogs-stream-prefix = "ecs"                      # prefix for log streams
         }
       }
     }
@@ -100,15 +100,15 @@ resource "aws_ecs_task_definition" "app" {
 # ECS - Services [The actual running containers in your cluster]
 ############################
 resource "aws_ecs_service" "app_services" {
-  name = "${var.project_name}-service"
-  cluster = module.ecs.cluster_id
+  name            = "${var.project_name}-service"
+  cluster         = module.ecs.cluster_id
   task_definition = aws_ecs_task_definition.app.arn
-  launch_type = "FARGATE"
-  desired_count = 2
+  launch_type     = "FARGATE"
+  desired_count   = 2
 
   network_configuration {
-    subnets = module.vpc.private_subnets
-    assign_public_ip = false
-    security_groups = [aws_security_group.web_sg.id]
+    subnets          = module.vpc.private_subnets
+    assign_public_ip = true
+    security_groups  = [aws_security_group.web_sg.id]
   }
 }
