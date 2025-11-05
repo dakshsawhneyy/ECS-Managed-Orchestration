@@ -1,3 +1,6 @@
+############################
+# VPC
+############################
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "~> 5.0"
@@ -18,3 +21,24 @@ module "vpc" {
 
   tags = local.common_tags
 }
+
+############################
+# ECS
+############################
+module "ecs" {
+  source  = "terraform-aws-modules/ecs/aws"
+  version = "6.7.0"
+
+  cluster_name = var.project_name
+  
+  # CloudWatch Observability
+  cluster_setting = {
+    "name": "containerInsights",
+    "value": "enabled" 
+  }
+
+  
+
+  tags = local.common_tags
+}
+
