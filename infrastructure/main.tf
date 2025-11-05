@@ -42,3 +42,15 @@ module "ecs" {
   tags = local.common_tags
 }
 
+############################
+# ECR
+############################
+module "ecr" {
+  source  = "terraform-aws-modules/ecr/aws"
+  version = "3.1.0"
+
+  repository_name = var.project_name
+  repository_type = "public"
+
+  tags = local.common_tags
+}
