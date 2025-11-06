@@ -22,20 +22,27 @@ module "vpc" {
   tags = local.common_tags
 }
 
-
 ############################
-# ECR
+# ECR -- two repos for two services
 ############################
 module "ecr" {
   source  = "terraform-aws-modules/ecr/aws"
   version = "3.1.0"
 
-  repository_name = var.project_name
+  repository_name = "service-a"
   repository_type = "public"
 
   tags = local.common_tags
 }
+module "ecr" {
+  source  = "terraform-aws-modules/ecr/aws"
+  version = "3.1.0"
 
+  repository_name = "service-b"
+  repository_type = "public"
+
+  tags = local.common_tags
+}
 
 ############################
 # ECS - cluster creation
@@ -47,10 +54,10 @@ module "ecs" {
   cluster_name = var.project_name
 
   # CloudWatch Observability
-  cluster_setting = {
+  cluster_setting = [{
     "name" : "containerInsights",
     "value" : "enabled"
-  }
+  }]
 
   tags = local.common_tags
 }
