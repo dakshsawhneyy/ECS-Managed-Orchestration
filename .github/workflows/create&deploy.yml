@@ -49,13 +49,13 @@ jobs:
 
       - name: Build & Push Service A
         run: |
-          docker build -t ${{ steps.get-ecr.outputs.service_a_url }}:${{ github.sha }} ./micro-services-app/service-a/
-          docker push ${{ steps.get-ecr.outputs.service_a_url }}:${{ github.sha }}
+          docker build -t ${{ steps.get-ecr.outputs.service_a_url }}:latest ./micro-services-app/service-a/
+          docker push ${{ steps.get-ecr.outputs.service_a_url }}:latest
 
       - name: Build & Push Service B
         run: |
-          docker build -t ${{ steps.get-ecr.outputs.service_b_url }}:${{ github.sha }} ./micro-services-app/service-b/
-          docker push ${{ steps.get-ecr.outputs.service_b_url }}:${{ github.sha }}
+          docker build -t ${{ steps.get-ecr.outputs.service_b_url }}:latest ./micro-services-app/service-b/
+          docker push ${{ steps.get-ecr.outputs.service_b_url }}:latest
 
       # - name: Destroy Infrastructure
       #   run: terraform destroy --auto-approve
