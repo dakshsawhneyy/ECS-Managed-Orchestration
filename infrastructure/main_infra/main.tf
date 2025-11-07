@@ -27,7 +27,7 @@ module "vpc" {
 ############################
 module "ecr" {
   source  = "terraform-aws-modules/ecr/aws"
-  version = "3.1.0"
+  version = "~> 2.2"
 
   for_each = local.ecr_repositories
 
@@ -35,6 +35,9 @@ module "ecr" {
   repository_type = each.value.repository_type
 
   create_lifecycle_policy = false
+
+  # Forcefully delete, even if it contains images
+  repository_force_delete = true
 
   tags = local.common_tags
 }
@@ -131,4 +134,12 @@ resource "aws_ecs_service" "app_services" {
     assign_public_ip = true
     security_groups  = [aws_security_group.web_sg.id]
   }
+
+  load_balancer {
+    target_group_arn = aws_alb_target_group.svc-a-tg.arn
+    container_name = "service-a"
+    container_port = 9000
+  }
+
+  depends_on = [ aws_lb_listener.alb-listener ]   # let alb listener gets created first
 }
