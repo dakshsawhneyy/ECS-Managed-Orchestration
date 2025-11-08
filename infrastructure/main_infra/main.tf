@@ -71,81 +71,91 @@ resource "aws_cloudwatch_log_group" "ecs" {
 ############################
 # ECS Task Definition -- A blueprint for what gonna run inside the ecs cluster
 ############################
-resource "aws_ecs_task_definition" "app" {
-  family                   = "${var.project_name}-task"
+resource "aws_ecs_task_definition" "service_a_task" {
+  family                   = "service-a-task"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
+  cpu                      = 256
+  memory                   = 512
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
-
   container_definitions = jsonencode([
     {
       name      = "service-a"
-      image     = "${module.ecr["service_a"].repository_url}:latest"
+      image     = "${aws_ecr_repository.service_a.repository_url}:latest"
       essential = true
       portMappings = [{
-        containerPort : 9000
-        # hostPort : 9000
-        protocol: "tcp"
+        containerPort = 3000
+        protocol      = "tcp"
       }]
-      # Integrate ECS Logs with Cloudwatch logs
-      logConfiguration = {
-        logDriver = "awslogs" # awslogs driver is standard way to integrate ECS logs with CLoudWatch logs
-        options = {
-          awslogs-group         = "/ecs/${var.project_name}" # Name of cloudwatch logs group -- we created it below
-          awslogs-region        = var.region                 # region where log group exists
-          awslogs-stream-prefix = "ecs"                      # prefix for log streams
+      environment = [
+        {
+          name  = "SERVICE_B_URL"
+          value = "http://${aws_service_discovery_service.service_b.name}" # or ALB DNS
         }
-      }
-    },
+      ]
+    }
+  ])
+}
+
+resource "aws_ecs_task_definition" "service_b_task" {
+  family                   = "service-b-task"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = 256
+  memory                   = 512
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  container_definitions = jsonencode([
     {
       name      = "service-b"
-      image     = "${module.ecr["service_b"].repository_url}:latest"
+      image     = "${aws_ecr_repository.service_b.repository_url}:latest"
       essential = true
       portMappings = [{
-        containerPort : 9001
-        # hostPort : 9001
-        protocol: "tcp"
+        containerPort = 9001
+        protocol      = "tcp"
       }]
-      # Integrate ECS Logs with Cloudwatch logs
-      logConfiguration = {
-        logDriver = "awslogs" # awslogs driver is standard way to integrate ECS logs with CLoudWatch logs
-        options = {
-          awslogs-group         = "/ecs/${var.project_name}" # Name of cloudwatch logs group -- we created it below
-          awslogs-region        = var.region                 # region where log group exists
-          awslogs-stream-prefix = "ecs"                      # prefix for log streams
-        }
-      }
-    },
+    }
   ])
 }
 
 ############################
 # ECS - Services [The actual running containers in your cluster]
 ############################
-resource "aws_ecs_service" "app_services" {
-  name            = "${var.project_name}-service"
-  cluster         = module.ecs.cluster_id
-  task_definition = aws_ecs_task_definition.app.arn
+resource "aws_ecs_service" "service_a" {
+  name            = "service-a"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.service_a_task.arn
   launch_type     = "FARGATE"
-  desired_count   = 2
-
+  desired_count   = 1
   network_configuration {
-    subnets          = module.vpc.private_subnets
+    subnets         = aws_subnet.public[*].id
     assign_public_ip = true
-    security_groups  = [aws_security_group.web_sg.id]
+    security_groups = [aws_security_group.ecs_sg.id]
   }
-
-  # service_registries {
-  #   registry_arn = aws_service_discovery_service.service_b
-  # }
-
   load_balancer {
-    target_group_arn = aws_alb_target_group.svc-a-tg.arn
+    target_group_arn = aws_lb_target_group.service_a_tg.arn
     container_name   = "service-a"
-    container_port   = 9000
+    container_port   = 3000
   }
+  depends_on = [aws_lb_listener.front_end]
+}
 
-  depends_on = [aws_lb_listener.alb-listener] # let alb listener gets created first
+resource "aws_ecs_service" "service_b" {
+  name            = "service-b"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.service_b_task.arn
+  launch_type     = "FARGATE"
+  desired_count   = 1
+  network_configuration {
+    subnets         = aws_subnet.private[*].id
+    assign_public_ip = false
+    security_groups = [aws_security_group.ecs_sg.id]
+  }
+  load_balancer {
+    target_group_arn = aws_lb_target_group.service_b_tg.arn
+    container_name   = "service-b"
+    container_port   = 5000
+  }
+  service_registries {
+    registry_arn = aws_service_discovery_service.service_b.arn
+  }
 }
