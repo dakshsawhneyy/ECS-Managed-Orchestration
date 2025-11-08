@@ -137,9 +137,9 @@ resource "aws_ecs_service" "app_services" {
 
   load_balancer {
     target_group_arn = aws_alb_target_group.svc-a-tg.arn
-    container_name = "service-a"
-    container_port = 9000
+    container_name   = "service-a"
+    container_port   = 9000
   }
 
-  depends_on = [ aws_lb_listener.alb-listener ]   # let alb listener gets created first
+  depends_on = [aws_lb_listener.alb-listener] # let alb listener gets created first
 }
