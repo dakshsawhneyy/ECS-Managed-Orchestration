@@ -76,7 +76,7 @@ resource "aws_security_group" "alb_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
-    description = "Allow users's:9000 request from anywhere"
+    description = "Allow 9000 requests from anywhere"
     from_port   = 9000
     to_port     = 9000
     protocol    = "tcp"
