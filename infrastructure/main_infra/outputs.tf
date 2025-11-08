@@ -28,3 +28,7 @@ output "aws_ecs_service_name" {
 output "aws_alb_access_dns_name" {
   value = aws_alb.alb.dns_name
 }
+
+output "sqs_url" {
+  value = aws_sqs_queue.my_q.url
+}
