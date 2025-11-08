@@ -137,6 +137,10 @@ resource "aws_ecs_service" "app_services" {
     security_groups  = [aws_security_group.web_sg.id]
   }
 
+  # service_registries {
+  #   registry_arn = aws_service_discovery_service.service_b
+  # }
+
   load_balancer {
     target_group_arn = aws_alb_target_group.svc-a-tg.arn
     container_name   = "service-a"

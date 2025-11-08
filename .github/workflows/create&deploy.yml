@@ -69,6 +69,6 @@ jobs:
         run: terraform apply --auto-approve
         working-directory: ./infrastructure/main_infra/
 
-      # - name: Destroy Infrastructure
-      #   run: terraform destroy --auto-approve
-      #   working-directory: ./infrastructure
+      - name: Destroy Infrastructure
+        run: terraform destroy --auto-approve
+        working-directory: ./infrastructure
