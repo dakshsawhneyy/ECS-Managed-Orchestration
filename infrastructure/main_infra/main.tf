@@ -84,7 +84,7 @@ resource "aws_ecs_task_definition" "app" {
       name      = "service-a"
       image     = "${module.ecr["service_a"].repository_url}:latest"
       essential = true
-      portMapping = [{
+      portMappings = [{
         containerPort : 9000
         hostPort : 9000
       }]
@@ -102,7 +102,7 @@ resource "aws_ecs_task_definition" "app" {
       name      = "service-b"
       image     = "${module.ecr["service_b"].repository_url}:latest"
       essential = true
-      portMapping = [{
+      portMappings = [{
         containerPort : 9001
         hostPort : 9001
       }]
