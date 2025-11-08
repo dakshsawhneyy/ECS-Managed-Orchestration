@@ -34,6 +34,13 @@ resource "aws_security_group" "web_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  ingress {
+    description = "Allow HTTP from anywhere"
+    from_port   = 8000
+    to_port     = 10000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   egress {
     description = "Allow all outbound traffic"
@@ -69,7 +76,7 @@ resource "aws_security_group" "alb_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
-    description = "Allow HTTPS from anywhere"
+    description = "Allow users's:9000 request from anywhere"
     from_port   = 9000
     to_port     = 9000
     protocol    = "tcp"

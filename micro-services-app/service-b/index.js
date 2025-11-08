@@ -48,6 +48,13 @@ app.get('/hello', (req,res) => {
     res.status(200).json({message: 'Hello from Service B - Daksh Sawhney'});
 })
 
+app.get('/healthy', (req, res) => {
+    res.status(200).json({
+        name: "👀 - Obserability 🔥- Daksh Sawhney",
+        status: "healthy"
+    })
+});
+
 // Sending personalized metrics to /metrics
 app.get('/metrics', async(req,res) => {
     res.set('Content-Type', promClient.register.contentType);

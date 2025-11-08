@@ -86,7 +86,8 @@ resource "aws_ecs_task_definition" "app" {
       essential = true
       portMappings = [{
         containerPort : 9000
-        hostPort : 9000
+        # hostPort : 9000
+        protocol: "tcp"
       }]
       # Integrate ECS Logs with Cloudwatch logs
       logConfiguration = {
@@ -104,7 +105,8 @@ resource "aws_ecs_task_definition" "app" {
       essential = true
       portMappings = [{
         containerPort : 9001
-        hostPort : 9001
+        # hostPort : 9001
+        protocol: "tcp"
       }]
       # Integrate ECS Logs with Cloudwatch logs
       logConfiguration = {
