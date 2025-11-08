@@ -129,7 +129,7 @@ resource "aws_ecs_service" "app_services" {
   cluster         = module.ecs.cluster_id
   task_definition = aws_ecs_task_definition.app.arn
   launch_type     = "FARGATE"
-  desired_count   = 2
+  desired_count   = 1
 
   network_configuration {
     subnets          = module.vpc.private_subnets
@@ -148,4 +148,43 @@ resource "aws_ecs_service" "app_services" {
   }
 
   depends_on = [aws_lb_listener.alb-listener] # let alb listener gets created first
+}
+
+
+######################
+# INGESTOR -- ECS
+######################
+resource "aws_ecs_task_definition" "ingestor" {
+  family                   = "${var.project_name}-ingestor"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "service-a"
+      image     = "${module.ecr["service_a"].repository_url}:latest"
+      essential = true
+      environment = [
+        { name = "SERVICE_A_URL", value = "http://${aws_alb.alb.dns_name}" },
+        { name = "SQS_URL", value = "${aws_sqs_queue.my_q.id}" },
+      ]
+    }
+  ])
+}
+
+resource "aws_ecs_service" "ingestor-svc" {
+  name            = "${var.project_name}-ingestor-svc"
+  cluster         = module.ecs.cluster_id
+  task_definition = aws_ecs_task_definition.ingestor.arn
+  launch_type     = "FARGATE"
+  desired_count   = 1
+
+  network_configuration {
+    subnets          = module.vpc.public_subnets
+    assign_public_ip = true
+    security_groups  = [aws_security_group.web_sg.id]
+  }
 }
