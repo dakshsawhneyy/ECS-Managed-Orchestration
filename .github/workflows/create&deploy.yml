@@ -34,11 +34,15 @@ jobs:
         run: terraform init
         working-directory: ./infrastructure/main_infra/
 
-      - name: Terraform Apply
-        id: apply
-        run: terraform apply --auto-approve
-        working-directory: ./infrastructure/main_infra/
+      # plan helps in debugging - fail if something is wrong, don't create directly
+      - name: Terraform Plan
+        run: terraform plan
 
+      # Create ECR Repos first, so images can be pushed before creation of ECS
+      - name: Terraform Apply -- ECR Repos
+        run: terraform apply --auto-approve -target=module.ecr
+
+      # fetch dynamic urls of ecr repos from terraform
       - name: Get ECR URLs from Terraform
         id: get-ecr
         run: |
@@ -56,6 +60,12 @@ jobs:
         run: |
           docker build -t ${{ steps.get-ecr.outputs.service_b_url }}:latest ./micro-services-app/service-b/
           docker push ${{ steps.get-ecr.outputs.service_b_url }}:latest
+
+      # Apply full infrastructure [ECS-ALB] because images are now present
+      - name: Full Terraform Apply
+        id: apply
+        run: terraform apply --auto-approve
+        working-directory: ./infrastructure/main_infra/
 
       # - name: Destroy Infrastructure
       #   run: terraform destroy --auto-approve
