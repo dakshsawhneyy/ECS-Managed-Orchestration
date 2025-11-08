@@ -1,5 +1,5 @@
 ############################
-# ALB - to access app running inside ECS
+# ALB - to access app running inside ECS --- [user -> listener -> alb -> target group -> backend(ECS)]
 ############################
 resource "aws_alb" "alb" {
   name = "${var.project_name}-alb"
@@ -12,9 +12,9 @@ resource "aws_alb" "alb" {
   tags = local.common_tags
 }
 
-# ALB Target Group
+# ALB Target Group -- responsible for sending user request to desired location
 resource "aws_alb_target_group" "svc-a-tg" {
-  name = "${var.project_name}-service-a-tg"
+  name = "${var.project_name}-tg"
   target_type = "ip"    # Since we using Fargate, use ip
   port = 9000
   protocol = "HTTP"
@@ -32,14 +32,14 @@ resource "aws_alb_target_group" "svc-a-tg" {
   }
 }
 
-# ALB Listener
+# ALB Listener -- takes incoming request from user and asks target group to send it
 resource "aws_lb_listener" "alb-listener" {
   load_balancer_arn = aws_alb.alb.arn
   port              = "80"
   protocol          = "HTTP"
 
   default_action {
-    type = "forward"
+    type = "forward"    # forwards request to target group
     target_group_arn = aws_alb_target_group.svc-a-tg.arn
   }
 }
