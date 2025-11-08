@@ -40,34 +40,34 @@ jobs:
         working-directory: ./infrastructure/main_infra/
 
       # Create ECR Repos first, so images can be pushed before creation of ECS
-      - name: Terraform Apply -- ECR Repos
-        run: terraform apply --auto-approve -target=module.ecr
-        working-directory: ./infrastructure/main_infra/
+      # - name: Terraform Apply -- ECR Repos
+      #   run: terraform apply --auto-approve -target=module.ecr
+      #   working-directory: ./infrastructure/main_infra/
 
       # fetch dynamic urls of ecr repos from terraform
-      - name: Get ECR URLs from Terraform
-        id: get-ecr
-        run: |
-          SERVICE_A_URL=$(aws ecr describe-repositories --repository-names service-a --query "repositories[0].repositoryUri" --output text)
-          SERVICE_B_URL=$(aws ecr describe-repositories --repository-names service-b --query "repositories[0].repositoryUri" --output text)
-          echo "service_a_url=$SERVICE_A_URL" >> $GITHUB_OUTPUT
-          echo "service_b_url=$SERVICE_B_URL" >> $GITHUB_OUTPUT
+      # - name: Get ECR URLs from Terraform
+      #   id: get-ecr
+      #   run: |
+      #     SERVICE_A_URL=$(aws ecr describe-repositories --repository-names service-a --query "repositories[0].repositoryUri" --output text)
+      #     SERVICE_B_URL=$(aws ecr describe-repositories --repository-names service-b --query "repositories[0].repositoryUri" --output text)
+      #     echo "service_a_url=$SERVICE_A_URL" >> $GITHUB_OUTPUT
+      #     echo "service_b_url=$SERVICE_B_URL" >> $GITHUB_OUTPUT
 
-      - name: Build & Push Service A
-        run: |
-          docker build -t ${{ steps.get-ecr.outputs.service_a_url }}:latest ./micro-services-app/service-a/
-          docker push ${{ steps.get-ecr.outputs.service_a_url }}:latest
+      # - name: Build & Push Service A
+      #   run: |
+      #     docker build -t ${{ steps.get-ecr.outputs.service_a_url }}:latest ./micro-services-app/service-a/
+      #     docker push ${{ steps.get-ecr.outputs.service_a_url }}:latest
 
-      - name: Build & Push Service B
-        run: |
-          docker build -t ${{ steps.get-ecr.outputs.service_b_url }}:latest ./micro-services-app/service-b/
-          docker push ${{ steps.get-ecr.outputs.service_b_url }}:latest
+      # - name: Build & Push Service B
+      #   run: |
+      #     docker build -t ${{ steps.get-ecr.outputs.service_b_url }}:latest ./micro-services-app/service-b/
+      #     docker push ${{ steps.get-ecr.outputs.service_b_url }}:latest
 
       # Apply full infrastructure [ECS-ALB] because images are now present
-      - name: Full Terraform Apply
-        id: apply
-        run: terraform apply --auto-approve
-        working-directory: ./infrastructure/main_infra/
+      # - name: Full Terraform Apply
+      #   id: apply
+      #   run: terraform apply --auto-approve
+      #   working-directory: ./infrastructure/main_infra/
 
       - name: Destroy Infrastructure
         run: terraform destroy --auto-approve
