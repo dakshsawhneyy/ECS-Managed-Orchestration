@@ -11,6 +11,9 @@ output "ecr_service_b_url" {
 output "ecr_ingestor_url" {
   value = module.ecr["ingestor"].repository_url
 }
+output "ecr_processor_url" {
+  value = module.ecr["processor"].repository_url
+}
 
 output "ecs_cluster_name" {
   value = module.ecs.cluster_name
