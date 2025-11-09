@@ -21,6 +21,10 @@ locals {
     ingestor = {
       repository_name = "ingestor"
       repository_type = "private"
+    },
+    processor = {
+      repository_name = "processor"
+      repository_type = "private"
     }
   }
 
