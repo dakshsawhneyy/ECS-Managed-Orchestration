@@ -92,3 +92,50 @@ resource "aws_security_group" "alb_sg" {
 
   tags = local.common_tags
 }
+
+
+######################################################
+# Attach inline policy for SQS + DynamoDB + CloudWatch
+######################################################
+resource "aws_iam_role_policy" "ecs_task_policy" {
+  name = "${var.project_name}-policy"
+  role = aws_iam_role.ecs_task_execution_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      # --- SQS permissions ---
+      {
+        Effect = "Allow",
+        Action = [
+          "sqs:SendMessage",
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueUrl",
+          "sqs:GetQueueAttributes"
+        ],
+        Resource = "*"
+      },
+      # --- DynamoDB permissions ---
+      {
+        Effect = "Allow",
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:Scan"
+        ],
+        Resource = "*"
+      },
+      # --- CloudWatch logs ---
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
