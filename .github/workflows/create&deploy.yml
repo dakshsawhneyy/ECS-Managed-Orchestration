@@ -50,8 +50,10 @@ jobs:
         run: |
           SERVICE_A_URL=$(aws ecr describe-repositories --repository-names service-a --query "repositories[0].repositoryUri" --output text)
           SERVICE_B_URL=$(aws ecr describe-repositories --repository-names service-b --query "repositories[0].repositoryUri" --output text)
+          INGESTOR_URL=$(aws ecr describe-repositories --repository-names ingestor --query "repositories[0].repositoryUri" --output text)
           echo "service_a_url=$SERVICE_A_URL" >> $GITHUB_OUTPUT
           echo "service_b_url=$SERVICE_B_URL" >> $GITHUB_OUTPUT
+          echo "ingestor_url=$INGESTOR_URL" >> $GITHUB_OUTPUT
 
       - name: Build & Push Service A
         run: |
@@ -62,6 +64,11 @@ jobs:
         run: |
           docker build -t ${{ steps.get-ecr.outputs.service_b_url }}:latest ./micro-services-app/service-b/
           docker push ${{ steps.get-ecr.outputs.service_b_url }}:latest
+      
+      - name: Build & Push Ingestor
+        run: |
+          docker build -t ${{ steps.get-ecr.outputs.ingestor_url }}:latest ./ingestor/
+          docker push ${{ steps.get-ecr.outputs.ingestor_url }}:latest
 
       # Apply full infrastructure [ECS-ALB] because images are now present
       - name: Full Terraform Apply
