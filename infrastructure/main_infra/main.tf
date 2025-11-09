@@ -163,7 +163,7 @@ resource "aws_ecs_task_definition" "ingestor" {
   cpu                      = "256"
   memory                   = "512"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn   # permission ecs needs for execution 
-  task_role_arn = aws_iam_role.ecs_task_execution_role    # permissions your containers need for other services
+  task_role_arn = aws_iam_role.ecs_task_execution_role.arn    # permissions your containers need for other services
 
   container_definitions = jsonencode([
     {
@@ -212,7 +212,7 @@ resource "aws_ecs_task_definition" "processor" {
   cpu                      = "256"
   memory                   = "512"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn   # permission ecs needs for execution 
-  task_role_arn = aws_iam_role.ecs_task_execution_role    # permissions your containers need for other services
+  task_role_arn = aws_iam_role.ecs_task_execution_role.arn    # permissions your containers need for other services
 
   container_definitions = jsonencode([
     {
