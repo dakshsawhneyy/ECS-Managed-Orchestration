@@ -1,4 +1,4 @@
-resource "aws_dynamodb_table" "terraform_lock" {
+resource "aws_dynamodb_table" "table" {
     name = "${var.project_name}-table"
     billing_mode = "PAY_PER_REQUEST"
     hash_key = "log_id"
