@@ -127,7 +127,7 @@ resource "aws_ecs_task_definition" "app" {
 # ECS - Services [The actual running containers in your cluster]
 ############################
 resource "aws_ecs_service" "app_services" {
-  name            = "${var.project_name}-service"
+  name            = "${var.project_name}-application"
   cluster         = module.ecs.cluster_id
   task_definition = aws_ecs_task_definition.app.arn
   launch_type     = "FARGATE"
