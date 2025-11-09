@@ -31,6 +31,7 @@ def sendToSQS(logs):
             
     
 def main():
+    print('Ingestor Started')
     while True:
         logs = fetch_logs()
         if logs:
@@ -41,5 +42,4 @@ def main():
         time.sleep(10)
 
 if __name__ == "__main__":
-    print('Ingestor Started')
     main()

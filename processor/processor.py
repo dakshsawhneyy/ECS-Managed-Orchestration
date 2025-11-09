@@ -51,20 +51,19 @@ def delete_msgs_from_sqs(reciept_handle):
 # Main Function
 def main():
     print('Processor Started')
-    messages = read_from_sqs()
-    if not messages:
-        print("No messages in SQS, waiting...")
-        time.sleep(5)
-        continue
-    
-    for msg in messages:
-        try:
-            log_data = json.loads(msg['Body'])
-            write_logs_to_dynamodb(log_data)
-            delete_msgs_from_sqs(msg['ReceiptHandle'])
-        except Exception as e:
-            print(f"Error processing message: {str(e)}")
-            
+    while True:
+        messages = read_from_sqs()
+        if not messages:
+            print("No messages in SQS, waiting...")
+            time.sleep(5)
+            continue
+        for msg in messages:
+            try:
+                log_data = json.loads(msg['Body'])
+                write_logs_to_dynamodb(log_data)
+                delete_msgs_from_sqs(msg['ReceiptHandle'])
+            except Exception as e:
+                print(f"Error processing message: {str(e)}")
 
 if __name__ == "__main__":
     main()
