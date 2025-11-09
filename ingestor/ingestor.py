@@ -2,6 +2,7 @@ import boto3
 import os
 import requests     # for api calls [axios]
 import time
+import json
 
 SERVICE_A_URL = os.getenv("SERVICE_A_URL")
 QUEUE_URL = os.getenv("SQS_URL")
@@ -10,8 +11,8 @@ sqs = boto3.client('sqs', region_name='ap-south-1')
 
 def fetch_logs():
     try:
-        response = requests.get(f"${SERVICE_A_URL}/logs")
-        if response.status_code == "200":
+        response = requests.get(f"{SERVICE_A_URL}/logs")
+        if response.status_code == 200:
             return response.json()
         else:
             print(f"Failed to fetch logs: {response.status_code}")
@@ -23,14 +24,14 @@ def fetch_logs():
 def sendToSQS(logs):
     for log in logs:
         try:
-            sqs.send_message(QueueURL=QUEUE_URL, MessageBody=json.dumps(log))
+            sqs.send_message(QueueUrl=QUEUE_URL, MessageBody=json.dumps(log))
             print("Logs sent to SQS")
         except Exception as e:
             print(f"Error sending logs to sqs: {str(e)}")
             
     
 def main():
-    while true:
+    while True:
         logs = fetch_logs()
         if logs:
             sendToSQS(logs)
