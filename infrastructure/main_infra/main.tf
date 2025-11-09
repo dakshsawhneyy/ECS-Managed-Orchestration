@@ -34,6 +34,8 @@ module "ecr" {
   repository_name = each.value.repository_name
   repository_type = each.value.repository_type
 
+  repository_image_tag_mutability = "MUTABLE"
+
   create_lifecycle_policy = false
 
   # Forcefully delete, even if it contains images
