@@ -131,7 +131,7 @@ resource "aws_ecs_service" "app_services" {
   cluster         = module.ecs.cluster_id
   task_definition = aws_ecs_task_definition.app.arn
   launch_type     = "FARGATE"
-  desired_count   = 1
+  desired_count   = 2
 
   network_configuration {
     subnets          = module.vpc.private_subnets
@@ -171,7 +171,7 @@ resource "aws_ecs_task_definition" "ingestor" {
       essential = true
       environment = [
         { name = "SERVICE_A_URL", value = "http://${aws_alb.alb.dns_name}" },
-        { name = "SQS_URL", value = "${aws_sqs_queue.my_q.id}" },
+        { name = "SQS_URL", value = "${aws_sqs_queue.my_q.url}" },
       ]
       # Integrate ECS Logs with Cloudwatch logs
       logConfiguration = {
@@ -190,6 +190,54 @@ resource "aws_ecs_service" "ingestor-svc" {
   name            = "${var.project_name}-ingestor-svc"
   cluster         = module.ecs.cluster_id
   task_definition = aws_ecs_task_definition.ingestor.arn
+  launch_type     = "FARGATE"
+  desired_count   = 1
+
+  network_configuration {
+    subnets          = module.vpc.public_subnets
+    assign_public_ip = true
+    security_groups  = [aws_security_group.web_sg.id]
+  }
+}
+
+
+######################
+# Processor -- ECS
+######################
+resource "aws_ecs_task_definition" "processor" {
+  family                   = "${var.project_name}-processor"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "processor"
+      image     = "${module.ecr["processor"].repository_url}:latest"
+      essential = true
+      environment = [
+        { name = "DYNAMODB_TABLE", value = "${aws_dynamodb_table.table.name}" },
+        { name = "SQS_URL", value = "${aws_sqs_queue.my_q.url}" },
+      ]
+      # Integrate ECS Logs with Cloudwatch logs
+      logConfiguration = {
+        logDriver = "awslogs" # awslogs driver is standard way to integrate ECS logs with CLoudWatch logs
+        options = {
+          awslogs-group         = "/ecs/${var.project_name}" # Name of cloudwatch logs group -- we created it below
+          awslogs-region        = var.region                 # region where log group exists
+          awslogs-stream-prefix = "ecs"                      # prefix for log streams
+        }
+      }
+    }
+  ])
+}
+
+resource "aws_ecs_service" "processor-svc" {
+  name            = "${var.project_name}-processor-svc"
+  cluster         = module.ecs.cluster_id
+  task_definition = aws_ecs_task_definition.processor.arn
   launch_type     = "FARGATE"
   desired_count   = 1
 
