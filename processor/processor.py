@@ -11,7 +11,7 @@ DYNAMODB_TABLE = os.getenv("DYNAMODB_TABLE")
 
 sqs = boto3.client('sqs', region_name='ap-south-1')
 dynamodb = boto3.resource('dynamodb', region_name='ap-south-1')
-table = dynamodb.table(DYNAMODB_TABLE)
+table = dynamodb.Table(DYNAMODB_TABLE)
 
 
 # Read logs from SQS
