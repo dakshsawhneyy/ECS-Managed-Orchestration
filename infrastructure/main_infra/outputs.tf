@@ -35,3 +35,7 @@ output "aws_alb_access_dns_name" {
 output "sqs_url" {
   value = aws_sqs_queue.my_q.url
 }
+
+output "DYNAMODB_TABLE_NAME" {
+  value = aws_dynamodb_table.table.name
+}
