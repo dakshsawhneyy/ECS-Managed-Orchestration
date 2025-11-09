@@ -17,6 +17,10 @@ locals {
     service_b = {
       repository_name = "service-b"
       repository_type = "private"
+    },
+    ingestor = {
+      repository_name = "ingestor"
+      repository_type = "private"
     }
   }
 
