@@ -51,6 +51,7 @@ jobs:
           SERVICE_A_URL=$(aws ecr describe-repositories --repository-names service-a --query "repositories[0].repositoryUri" --output text)
           SERVICE_B_URL=$(aws ecr describe-repositories --repository-names service-b --query "repositories[0].repositoryUri" --output text)
           INGESTOR_URL=$(aws ecr describe-repositories --repository-names ingestor --query "repositories[0].repositoryUri" --output text)
+          PROCESSOR_URL=$(aws ecr describe-repositories --repository-names processor --query "repositories[0].repositoryUri" --output text)
           echo "service_a_url=$SERVICE_A_URL" >> $GITHUB_OUTPUT
           echo "service_b_url=$SERVICE_B_URL" >> $GITHUB_OUTPUT
           echo "ingestor_url=$INGESTOR_URL" >> $GITHUB_OUTPUT
