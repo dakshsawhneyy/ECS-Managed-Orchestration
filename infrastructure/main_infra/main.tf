@@ -166,8 +166,8 @@ resource "aws_ecs_task_definition" "ingestor" {
 
   container_definitions = jsonencode([
     {
-      name      = "service-a"
-      image     = "${module.ecr["service_a"].repository_url}:latest"
+      name      = "ingestor"
+      image     = "${module.ecr["ingestor"].repository_url}:latest"
       essential = true
       environment = [
         { name = "SERVICE_A_URL", value = "http://${aws_alb.alb.dns_name}" },
