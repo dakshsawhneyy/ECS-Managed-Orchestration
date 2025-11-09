@@ -8,6 +8,9 @@ output "ecr_service_a_url" {
 output "ecr_service_b_url" {
   value = module.ecr["service_b"].repository_url
 }
+output "ecr_service_b_url" {
+  value = module.ecr["ingestor"].repository_url
+}
 
 output "ecs_cluster_name" {
   value = module.ecs.cluster_name
@@ -26,7 +29,7 @@ output "aws_ecs_service_name" {
 }
 
 output "aws_alb_access_dns_name" {
-  value = aws_alb.alb.dns_name
+  value = "http://${aws_alb.alb.dns_name}"
 }
 
 output "sqs_url" {
