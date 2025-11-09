@@ -8,7 +8,7 @@ output "ecr_service_a_url" {
 output "ecr_service_b_url" {
   value = module.ecr["service_b"].repository_url
 }
-output "ecr_service_b_url" {
+output "ecr_ingestor_url" {
   value = module.ecr["ingestor"].repository_url
 }
 
