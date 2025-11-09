@@ -173,6 +173,15 @@ resource "aws_ecs_task_definition" "ingestor" {
         { name = "SERVICE_A_URL", value = "http://${aws_alb.alb.dns_name}" },
         { name = "SQS_URL", value = "${aws_sqs_queue.my_q.id}" },
       ]
+      # Integrate ECS Logs with Cloudwatch logs
+      logConfiguration = {
+        logDriver = "awslogs" # awslogs driver is standard way to integrate ECS logs with CLoudWatch logs
+        options = {
+          awslogs-group         = "/ecs/${var.project_name}" # Name of cloudwatch logs group -- we created it below
+          awslogs-region        = var.region                 # region where log group exists
+          awslogs-stream-prefix = "ecs"                      # prefix for log streams
+        }
+      }
     }
   ])
 }
