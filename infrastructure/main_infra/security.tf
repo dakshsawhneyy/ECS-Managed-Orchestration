@@ -135,6 +135,13 @@ resource "aws_iam_role_policy" "ecs_task_policy" {
           "logs:PutLogEvents"
         ],
         Resource = "*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "logs:CreateLogGroup"
+        ],
+        "Resource": "*"
       }
     ]
   })
