@@ -27,7 +27,6 @@ def read_from_sqs():
         messages = response.get('Messages', [])
         print('Messages: ', messages)
         return messages
-        time.sleep(5)   # sleep for some time
     except Exception as e:
         print(f"Error receiving messages: {str(e)}")
         return []
@@ -38,11 +37,12 @@ def write_logs_to_dynamodb(log_data):
     try:
         log_data['id'] = str(uuid.uuid4())
         table.put_item(Item=log_data)
+        print(f"Inserted log into DynamoDB: {log_data['id']}")
     except Exception as e:
         print(f"Error inserting into DynamoDB: {str(e)}")
         
 # Delete messages from SQS, once they been inserted into DynamoDB
-def delete_msgs_from_sqs(reciept_handle):
+def delete_msgs_from_sqs(receipt_handle):
     try:
         sqs.delete_message(QueueUrl=SQS_URL, ReceiptHandle=receipt_handle)
         print("Message deleted from SQS")
@@ -61,9 +61,17 @@ def main():
             continue
         for msg in messages:
             try:
-                log_data = json.loads(msg['Body'])
+                body = msg['Body']
+                try:
+                    log_data = json.loads(msg['Body'])
+                    if not isinstance(log_data, dict):
+                        log_data = {"message": str(log_data)}
+                except json.JSONDecodeError:
+                    log_data = {"message": body}
+                    
                 write_logs_to_dynamodb(log_data)
                 delete_msgs_from_sqs(msg['ReceiptHandle'])
+                
             except Exception as e:
                 print(f"Error processing message: {str(e)}")
 
