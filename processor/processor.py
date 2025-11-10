@@ -17,8 +17,8 @@ table = dynamodb.Table(DYNAMODB_TABLE)
 # Read logs from SQS
 def read_from_sqs():
     try:
-        response = sqs.recieve_message(
-            QueueUrl=QUEUE_URL,
+        response = sqs.receive_message(
+            QueueUrl=SQS_URL,
             MaxNumberOfMessages=10,         # fetch up to 10 at once
             WaitTimeSeconds=10,             # enable long polling
             VisibilityTimeout=30            # gives time to process before retry
@@ -27,6 +27,7 @@ def read_from_sqs():
         messages = response.get('Messages', [])
         print('Messages: ', messages)
         return messages
+        time.sleep(5)   # sleep for some time
     except Exception as e:
         print(f"Error receiving messages: {str(e)}")
         return []
@@ -35,6 +36,7 @@ def read_from_sqs():
 # Function to write logs in DynamoDB
 def write_logs_to_dynamodb(log_data):
     try:
+        log_data['id'] = str(uuid.uuid4())
         table.put_item(Item=log_data)
     except Exception as e:
         print(f"Error inserting into DynamoDB: {str(e)}")
