@@ -35,7 +35,7 @@ def read_from_sqs():
 # Function to write logs in DynamoDB
 def write_logs_to_dynamodb(log_data):
     try:
-        log_data['id'] = str(uuid.uuid4())
+        log_data['log_id'] = str(uuid.uuid4())
         table.put_item(Item=log_data)
         print(f"Inserted log into DynamoDB: {log_data['id']}")
     except Exception as e:
