@@ -83,6 +83,22 @@ jobs:
         run: terraform apply --auto-approve
         working-directory: ./infrastructure/main_infra/
 
+      # Force ECS to run new images after each update
+      - name: Force ECS Redeploy (Pull latest images)
+        run: |
+          aws ecs update-service \
+            --cluster ecs-managed-orchestration \
+            --service ecs-managed-orchestration-application \
+            --force-new-deployment
+          aws ecs update-service \
+            --cluster ecs-managed-orchestration \
+            --service ecs-managed-orchestration-ingestor-svc \
+            --force-new-deployment
+          aws ecs update-service \
+            --cluster ecs-managed-orchestration \
+            --service ecs-managed-orchestration-processor-svc \
+            --force-new-deployment
+
       # - name: Destroy Infrastructure
       #   run: terraform destroy --auto-approve
       #   working-directory: ./infrastructure/main_infra/
