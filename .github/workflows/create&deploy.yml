@@ -1,104 +1,104 @@
-name: Build and Push
+# name: Build and Push
 
-on:
-  push:
-    branches: ["master"]
+# on:
+#   push:
+#     branches: ["master"]
 
-env:
-  AWS_REGION: ap-south-1
+# env:
+#   AWS_REGION: ap-south-1
 
-jobs:
+# jobs:
   
-  build-and-push:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Code Checkout
-        uses: actions/checkout@v4
+#   build-and-push:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Code Checkout
+#         uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v3
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+#       - name: Configure AWS Credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+#       - name: Login to Amazon ECR
+#         id: login-ecr
+#         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Terraform Init
-        id: init
-        run: terraform init
-        working-directory: ./infrastructure/main_infra/
+#       - name: Terraform Init
+#         id: init
+#         run: terraform init
+#         working-directory: ./infrastructure/main_infra/
 
-      # plan helps in debugging - fail if something is wrong, don't create directly
-      - name: Terraform Plan
-        run: terraform plan
-        working-directory: ./infrastructure/main_infra/
+#       # plan helps in debugging - fail if something is wrong, don't create directly
+#       - name: Terraform Plan
+#         run: terraform plan
+#         working-directory: ./infrastructure/main_infra/
 
-      # Create ECR Repos first, so images can be pushed before creation of ECS
-      - name: Terraform Apply -- ECR Repos
-        run: terraform apply --auto-approve -target=module.ecr
-        working-directory: ./infrastructure/main_infra/
+#       # Create ECR Repos first, so images can be pushed before creation of ECS
+#       - name: Terraform Apply -- ECR Repos
+#         run: terraform apply --auto-approve -target=module.ecr
+#         working-directory: ./infrastructure/main_infra/
 
-      # fetch dynamic urls of ecr repos from terraform
-      - name: Get ECR URLs from Terraform
-        id: get-ecr
-        run: |
-          SERVICE_A_URL=$(aws ecr describe-repositories --repository-names service-a --query "repositories[0].repositoryUri" --output text)
-          SERVICE_B_URL=$(aws ecr describe-repositories --repository-names service-b --query "repositories[0].repositoryUri" --output text)
-          INGESTOR_URL=$(aws ecr describe-repositories --repository-names ingestor --query "repositories[0].repositoryUri" --output text)
-          PROCESSOR_URL=$(aws ecr describe-repositories --repository-names processor --query "repositories[0].repositoryUri" --output text)
-          echo "service_a_url=$SERVICE_A_URL" >> $GITHUB_OUTPUT
-          echo "service_b_url=$SERVICE_B_URL" >> $GITHUB_OUTPUT
-          echo "ingestor_url=$INGESTOR_URL" >> $GITHUB_OUTPUT
-          echo "processor_url=$PROCESSOR_URL" >> $GITHUB_OUTPUT
+#       # fetch dynamic urls of ecr repos from terraform
+#       - name: Get ECR URLs from Terraform
+#         id: get-ecr
+#         run: |
+#           SERVICE_A_URL=$(aws ecr describe-repositories --repository-names service-a --query "repositories[0].repositoryUri" --output text)
+#           SERVICE_B_URL=$(aws ecr describe-repositories --repository-names service-b --query "repositories[0].repositoryUri" --output text)
+#           INGESTOR_URL=$(aws ecr describe-repositories --repository-names ingestor --query "repositories[0].repositoryUri" --output text)
+#           PROCESSOR_URL=$(aws ecr describe-repositories --repository-names processor --query "repositories[0].repositoryUri" --output text)
+#           echo "service_a_url=$SERVICE_A_URL" >> $GITHUB_OUTPUT
+#           echo "service_b_url=$SERVICE_B_URL" >> $GITHUB_OUTPUT
+#           echo "ingestor_url=$INGESTOR_URL" >> $GITHUB_OUTPUT
+#           echo "processor_url=$PROCESSOR_URL" >> $GITHUB_OUTPUT
 
-      - name: Build & Push Service A
-        run: |
-          docker build -t ${{ steps.get-ecr.outputs.service_a_url }}:latest ./micro-services-app/service-a/
-          docker push ${{ steps.get-ecr.outputs.service_a_url }}:latest
+#       - name: Build & Push Service A
+#         run: |
+#           docker build -t ${{ steps.get-ecr.outputs.service_a_url }}:latest ./micro-services-app/service-a/
+#           docker push ${{ steps.get-ecr.outputs.service_a_url }}:latest
 
-      - name: Build & Push Service B
-        run: |
-          docker build -t ${{ steps.get-ecr.outputs.service_b_url }}:latest ./micro-services-app/service-b/
-          docker push ${{ steps.get-ecr.outputs.service_b_url }}:latest
+#       - name: Build & Push Service B
+#         run: |
+#           docker build -t ${{ steps.get-ecr.outputs.service_b_url }}:latest ./micro-services-app/service-b/
+#           docker push ${{ steps.get-ecr.outputs.service_b_url }}:latest
       
-      - name: Build & Push Ingestor
-        run: |
-          docker build -t ${{ steps.get-ecr.outputs.ingestor_url }}:latest ./ingestor/
-          docker push ${{ steps.get-ecr.outputs.ingestor_url }}:latest
+#       - name: Build & Push Ingestor
+#         run: |
+#           docker build -t ${{ steps.get-ecr.outputs.ingestor_url }}:latest ./ingestor/
+#           docker push ${{ steps.get-ecr.outputs.ingestor_url }}:latest
 
-      - name: Build & Push Processor
-        run: |
-          docker build -t ${{ steps.get-ecr.outputs.processor_url }}:latest ./processor/
-          docker push ${{ steps.get-ecr.outputs.processor_url }}:latest
+#       - name: Build & Push Processor
+#         run: |
+#           docker build -t ${{ steps.get-ecr.outputs.processor_url }}:latest ./processor/
+#           docker push ${{ steps.get-ecr.outputs.processor_url }}:latest
 
-      # Apply full infrastructure [ECS-ALB] because images are now present
-      - name: Full Terraform Apply
-        id: apply
-        run: terraform apply --auto-approve
-        working-directory: ./infrastructure/main_infra/
+#       # Apply full infrastructure [ECS-ALB] because images are now present
+#       - name: Full Terraform Apply
+#         id: apply
+#         run: terraform apply --auto-approve
+#         working-directory: ./infrastructure/main_infra/
 
-      # Force ECS to run new images after each update
-      - name: Force ECS Redeploy (Pull latest images)
-        run: |
-          aws ecs update-service \
-            --cluster ecs-managed-orchestration \
-            --service ecs-managed-orchestration-application \
-            --force-new-deployment
-          aws ecs update-service \
-            --cluster ecs-managed-orchestration \
-            --service ecs-managed-orchestration-ingestor-svc \
-            --force-new-deployment
-          aws ecs update-service \
-            --cluster ecs-managed-orchestration \
-            --service ecs-managed-orchestration-processor-svc \
-            --force-new-deployment
+#       # Force ECS to run new images after each update
+#       - name: Force ECS Redeploy (Pull latest images)
+#         run: |
+#           aws ecs update-service \
+#             --cluster ecs-managed-orchestration \
+#             --service ecs-managed-orchestration-application \
+#             --force-new-deployment
+#           aws ecs update-service \
+#             --cluster ecs-managed-orchestration \
+#             --service ecs-managed-orchestration-ingestor-svc \
+#             --force-new-deployment
+#           aws ecs update-service \
+#             --cluster ecs-managed-orchestration \
+#             --service ecs-managed-orchestration-processor-svc \
+#             --force-new-deployment
 
-      # - name: Destroy Infrastructure
-      #   run: terraform destroy --auto-approve
-      #   working-directory: ./infrastructure/main_infra/
+#       # - name: Destroy Infrastructure
+#       #   run: terraform destroy --auto-approve
+#       #   working-directory: ./infrastructure/main_infra/
