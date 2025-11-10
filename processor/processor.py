@@ -37,7 +37,7 @@ def write_logs_to_dynamodb(log_data):
     try:
         log_id = str(uuid.uuid4())
         log_data['log_id'] = log_id
-        print(f"📦 Preparing to insert: {log_data}")        # Debugging
+        print(f"Preparing to insert: {log_data}")        # Debugging
         table.put_item(Item=log_data)
         print(f"Inserted log into DynamoDB: {log_data['log_id']}")      # Debugging
     except Exception as e:
