@@ -44,7 +44,7 @@ def write_logs_to_dynamodb(log_data):
 # Delete messages from SQS, once they been inserted into DynamoDB
 def delete_msgs_from_sqs(reciept_handle):
     try:
-        sqs.delete_message(QueueUrl=QUEUE_URL, ReceiptHandle=receipt_handle)
+        sqs.delete_message(QueueUrl=SQS_URL, ReceiptHandle=receipt_handle)
         print("Message deleted from SQS")
     except Exception as e:
         print(f"Error deleting messages from SQS: {str(e)}")
